@@ -35,13 +35,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Long userRegister(String userAccount, String userPassword, String checkPassword) {
         //1.校验
-        if(StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
+        if(StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             return -1L;
         }
         if(userAccount.length()<4) return -1L;
         if (userPassword.length()<8) return -1L;
-        //校验账户不能包含特殊字符
-        String validPattern = "[`~!@#$%^&*()+=|{}':;\",\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        //校验账户不能包含特殊字符,定义只能包含字母、数字和下划线的正则表达式。
+        String validPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
             return -1L; // 如果找到特殊字符，返回 -1L
