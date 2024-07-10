@@ -1,5 +1,4 @@
 package camellia.service;
-import java.util.Date;
 
 import camellia.model.User;
 import org.junit.jupiter.api.Assertions;
@@ -7,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 用户服务测试
@@ -20,6 +18,9 @@ class UserServiceTest {
     @Autowired
     private UserService userService;
 
+    /**
+     * Mybatis-Plus SQL语句测试
+     */
     @Test
     public void testAddUser(){
         User user = new User();
@@ -33,6 +34,54 @@ class UserServiceTest {
         boolean result = userService.save(user);
         System.out.println(user.getId());
         Assertions.assertTrue(result);
+    }
+
+
+    /**
+     * 用户校验测试
+     */
+    @Test
+    void userRegister() {
+        //有空字段
+        String username = "XIAOHUA";
+        String password = "";
+        String checkPassword = "242118888";
+        Long result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //用户名<4位
+        username="XI";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //密码<8位
+        username = "XIAOHUA";
+        password = "24211";
+        checkPassword = "24211";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //用户名相同
+        username = "Camellia";
+        password = "242118888";
+        checkPassword = "242118888";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //包含特殊字符
+        username = "Came?llia";
+        password = "242118888";
+        checkPassword = "242118888";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //二次确认密码不一致
+        username = "XiaoHua";
+        password = "242118888";
+        checkPassword = "242116666";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertEquals(-1,result);
+        //成功数据
+        username = "XIAOHUA";
+        password = "242118888";
+        checkPassword = "242118888";
+        result = userService.userRegister(username, password, checkPassword);
+        Assertions.assertTrue(result>0);
     }
 
 }
