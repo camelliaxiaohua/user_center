@@ -65,7 +65,7 @@ class UserServiceTest {
         result = userService.userRegister(username, password, checkPassword);
         Assertions.assertEquals(-1,result);
         //包含特殊字符
-        username = "Came?llia";
+        username = "Came**llia";
         password = "242118888";
         checkPassword = "242118888";
         result = userService.userRegister(username, password, checkPassword);
@@ -77,7 +77,7 @@ class UserServiceTest {
         result = userService.userRegister(username, password, checkPassword);
         Assertions.assertEquals(-1,result);
         //成功数据
-        username = "XIAOHUA";
+        username = "Camellia_xiaohua";
         password = "242118888";
         checkPassword = "242118888";
         result = userService.userRegister(username, password, checkPassword);

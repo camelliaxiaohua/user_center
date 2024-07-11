@@ -1,7 +1,8 @@
 package camellia.service.impl;
-import java.util.Date;
 
+import camellia.constant.UserConstant;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import camellia.model.User;
 import camellia.service.UserService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,8 +30,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     //密码加密——加盐
     private static final String SALT = "camellia";
-    //用户登入态键
-    private static final String USER_LOGIN_STATE = "userLoginState";
 
 
     @Autowired
@@ -52,9 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userAccount.length() < 4) return -1L;
         if (userPassword.length() < 8) return -1L;
         //校验账户不能包含特殊字符,定义只能包含字母、数字和下划线的正则表达式。
-        String validPattern = "^[a-zA-Z0-9_]+$";
+        String validPattern = "^[a-zA-Z0-9_]*$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (matcher.find()) {
+        if (!matcher.find()) {
             return -1L; // 如果找到特殊字符，返回 -1L
         }
         //密码和确认密码不同
@@ -62,7 +62,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //账户不能重复(放在校验最后，减少性能浪费。)
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
-        long count = userMapper.selectCount(queryWrapper);
+        List<User> users = userMapper.selectList(queryWrapper);
+        int count = users.size();
         if (count > 0) {
             return -1L;
         }
@@ -74,6 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        user.setIsDelete((short) 0); //设置逻辑值，防止SQL查询出问题。
         int saveResult = userMapper.insert(user);
         if (saveResult == 0) return -1L;
         return user.getId();
@@ -97,7 +99,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //校验账户不能包含特殊字符,定义只能包含字母、数字和下划线的正则表达式。
         String validPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (matcher.find()) {
+        if (!matcher.find()) {
             return null; // 如果找到特殊字符，返回 -1L
         }
 
@@ -116,6 +118,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         //4.用户脱敏
+        User safetyUser = getSafetyUser(user);
+        //5.用户登入成功，设置登入成功的session。
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, safetyUser);
+        return safetyUser;
+    }
+
+    /**
+     * 通过用户昵称，模糊查询。
+     * @param username
+     * @return
+     */
+    @Override
+    public List<User> searchUsers(String username) {
+        QueryWrapper queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isAnyBlank(username)) {
+            queryWrapper.like("username", username);
+        }
+        queryWrapper.select("username", username);
+        List<User> users = userMapper.selectList(queryWrapper);
+        return users;
+    }
+
+
+    /**
+     * 通过id实现逻辑上的删除 <br>
+     * 实际上就是查询要删除的id，将这个用户isDelete更新为1。
+     * @param id
+     * @return
+     */
+    @Override
+    public boolean deleteUser(long id) {
+        if (id < 0) {
+            return false;
+        }
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", id);
+        // 设置逻辑删除标记值，这里假设1表示已删除
+        updateWrapper.set("is_delete", 1);
+        int rows = userMapper.update(null, updateWrapper);
+        return rows > 0;
+    }
+
+    /**
+     * 用户脱敏
+     * @param user
+     * @return
+     */
+    public User getSafetyUser(User user){
         User safetyUser = new User();
         safetyUser.setId(user.getId());
         safetyUser.setUsername(user.getUsername());
@@ -126,13 +176,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setEmail(user.getEmail());
         safetyUser.setUserStatus(user.getUserStatus());
         safetyUser.setCreateTime(user.getCreateTime());
-
-        //5.用户登入成功，设置登入成功的session。
-        request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
+        safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
     }
 }
-
 
 
 
