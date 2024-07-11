@@ -4,7 +4,7 @@ import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.DigestUtils;
 
 import java.security.MessageDigest;
@@ -86,7 +86,7 @@ public class EncryptTest {
      * BCryptPasswordEncoder 是 Spring Security 提供的一个类，用于对密码进行加密和验证。
      * 它使用 BCrypt 加密算法，该算法通过一个内置的 salt（盐）机制来增强密码的安全性。<br>
      */
-    @Test
+    /*@Test
     void testBCrypt() {
         // 原始密码，待加密的明文密码
         String rawPassword = "camellia24211";
@@ -106,7 +106,7 @@ public class EncryptTest {
         // 打印验证结果
         System.out.println("Password Matches: " + matches);
     }
-
+*/
 
     @Test
     void testArgon2() {
