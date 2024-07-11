@@ -2,6 +2,7 @@ package camellia.service;
 
 import camellia.model.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
 * @author 24211
@@ -17,4 +18,12 @@ public interface UserService extends IService<User> {
      * @return
      */
     Long userRegister(String userAccount, String userPassword, String checkPassword);
+
+    /**
+     * 用户登入
+     * @param userAccount 账户
+     * @param userPassword 密码
+     * @return 返回脱敏后的用户信息
+     */
+    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 }
