@@ -2,6 +2,7 @@ package camellia.mapper;
 
 import camellia.model.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author 24211
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-07-10 16:10:37
 * @Entity camellia.model.User
 */
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
 
 }
