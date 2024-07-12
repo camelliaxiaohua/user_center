@@ -46,41 +46,42 @@ class UserServiceTest {
         String username = "XIAOHUA";
         String password = "";
         String checkPassword = "242118888";
-        Long result = userService.userRegister(username, password, checkPassword);
+        String planetCode = "12345";
+        Long result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //用户名<4位
         username="XI";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //密码<8位
         username = "XIAOHUA";
         password = "24211";
         checkPassword = "24211";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //用户名相同
         username = "Camellia";
         password = "242118888";
         checkPassword = "242118888";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //包含特殊字符
         username = "Came**llia";
         password = "242118888";
         checkPassword = "242118888";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //二次确认密码不一致
         username = "XiaoHua";
         password = "242118888";
         checkPassword = "242116666";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
         //成功数据
         username = "Camellia_xiaohua";
         password = "242118888";
         checkPassword = "242118888";
-        result = userService.userRegister(username, password, checkPassword);
+        result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertTrue(result>0);
     }
 
