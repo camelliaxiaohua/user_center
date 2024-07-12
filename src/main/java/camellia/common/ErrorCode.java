@@ -1,11 +1,12 @@
 package camellia.common;
 
 /**
- * 全局错误码
+ * 全局错误码:定义常见的错误码，如成功、参数错误、未登录、无权限和系统内部异常，便于在系统中统一处理错误。
  * @Datetime: 2024/7/12下午1:53
  * @author: Camellia.xioahua
  */
 public enum ErrorCode {
+    // 错误码常量，包含 code、message 和 description 三个字段。
     /**
      * 成功
      */
@@ -30,18 +31,21 @@ public enum ErrorCode {
      * 系统内部异常
      */
     SYSTEM_ERROR(50000, "系统内部异常", "");
+
+
     /**
-     * 状态码
+     * 错误码的状态码
      */
     private final int code;
     /**
-     * 状态码信息
+     * 错误码的简短信息
      */
     private final String message;
     /**
-     * 状态码描述
+     * 错误码的详细描述
      */
     private final String description;
+
 
     ErrorCode(int code, String message, String description) {
         this.code = code;
@@ -49,4 +53,15 @@ public enum ErrorCode {
         this.description = description;
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }
