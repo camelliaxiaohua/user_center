@@ -17,12 +17,14 @@ public interface UserService extends IService<User> {
 
     /**
      * 注册逻辑校验
-     * @param userAccount  用户账户
-     * @param userPassword 用户密码
+     *
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
      * @param checkPassword 用户确定密码
+     * @param planetCode
      * @return
      */
-    Long userRegister(String userAccount, String userPassword, String checkPassword);
+    Long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
 
     /**
      * 用户登入
