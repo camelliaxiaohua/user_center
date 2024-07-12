@@ -1,6 +1,8 @@
 package camellia.service.impl;
 
+import camellia.common.ErrorCode;
 import camellia.constant.UserConstant;
+import camellia.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -8,7 +10,6 @@ import camellia.model.User;
 import camellia.service.UserService;
 import camellia.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,31 +43,48 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param userAccount   用户账户
      * @param userPassword  用户密码
      * @param checkPassword 用户确定密码
+     * @param planetCode 用户编号
      * @return
      */
     @Override
-    public Long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public Long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         //1.校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        if (userAccount.length() < 4) return -1L;
-        if (userPassword.length() < 8) return -1L;
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if (planetCode.length()>5){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户编号过长");
+        }
         //校验账户不能包含特殊字符,定义只能包含字母、数字和下划线的正则表达式。
         String validPattern = "^[a-zA-Z0-9_]*$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return -1L; // 如果找到特殊字符，返回 -1L
+            throw new BusinessException(ErrorCode.PARAMS_ERROR); // 如果找到特殊字符，返回 -1L
         }
         //密码和确认密码不同
-        if (!checkPassword.equals(userPassword)) return -1L;
+        if (!checkPassword.equals(userPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         //账户不能重复(放在校验最后，减少性能浪费。)
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
-        List<User> users = userMapper.selectList(queryWrapper);
-        int count = users.size();
+        Long count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户名已被使用");
+        }
+
+        //用户编号账户不能重复(放在校验最后，减少性能浪费。)
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("planet_code", planetCode);
+        count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
         //2. 密码加密
@@ -78,7 +96,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setUserPassword(encryptPassword);
         user.setIsDelete((short) 0); //设置逻辑值，防止SQL查询出问题。
         int saveResult = userMapper.insert(user);
-        if (saveResult == 0) return -1L;
+        if (saveResult == 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         return user.getId();
     }
 
@@ -93,15 +113,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //1.校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
-        if (userAccount.length() < 4) return null;
-        if (userPassword.length() < 8) return null;
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号过短");
+        }
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
+        }
         //校验账户不能包含特殊字符,定义只能包含字母、数字和下划线的正则表达式。
         String validPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return null; // 如果找到特殊字符，返回 -1L
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号包含非法字符");// 如果找到特殊字符，返回 -1L
         }
 
         //2. 密码加密
@@ -115,7 +139,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //用户不存在或者账号密码错误。
         if (user == null){
             log.info("user login fail, userAccount cannot match userPassword. account {} password {}", userAccount, userPassword);
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户不存在或者账号密码错误");
         }
 
         //4.用户脱敏
@@ -151,7 +175,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean deleteUser(long id) {
         if (id < 0) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"ID为空");
         }
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id", id);
@@ -180,6 +204,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setUserStatus(user.getUserStatus());
         safetyUser.setCreateTime(user.getCreateTime());
         safetyUser.setUserRole(user.getUserRole());
+        safetyUser.setPlanetCode(user.getPlanetCode());
         return safetyUser;
     }
 
