@@ -80,6 +80,14 @@ public class User implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 角色，是否为管理员
+     */
     private Integer userRole;
+
+    /**
+     * 编号
+     */
+    private String planetCode;
 
 }
