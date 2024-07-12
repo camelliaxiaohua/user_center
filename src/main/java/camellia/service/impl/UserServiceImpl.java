@@ -8,6 +8,7 @@ import camellia.model.User;
 import camellia.service.UserService;
 import camellia.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +166,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param user
      * @return
      */
+    @Override
     public User getSafetyUser(User user){
+        if (user == null) return null;
         User safetyUser = new User();
         safetyUser.setId(user.getId());
         safetyUser.setUsername(user.getUsername());
@@ -178,6 +181,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setCreateTime(user.getCreateTime());
         safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
+    }
+
+
+    /**
+     * 用户注销实现
+     * @param request
+     */
+    @Override
+    public Integer userLogOut(HttpServletRequest request) {
+        //移除用户登入态
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return 1;
     }
 }
 

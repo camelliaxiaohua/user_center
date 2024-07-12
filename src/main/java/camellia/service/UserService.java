@@ -48,4 +48,12 @@ public interface UserService extends IService<User> {
     boolean deleteUser(long id);
 
     User getSafetyUser(User user);
+
+
+    /**
+     * 请求用户注销
+     * @param request
+     * @return
+     */
+    Integer userLogOut(HttpServletRequest request);
 }
