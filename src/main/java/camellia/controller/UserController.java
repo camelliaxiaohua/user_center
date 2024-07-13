@@ -26,8 +26,9 @@ import java.util.stream.Collectors;
  */
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 @Slf4j
+//@CrossOrigin(value = "https://flower.camelliaxiaohua.online", allowCredentials = "true")
 public class UserController {
 
     @Autowired
