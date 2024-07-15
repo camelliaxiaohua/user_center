@@ -1,6 +1,12 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: user_center
+
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
 
 
   # DataSource Config
@@ -8,7 +14,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 24211
-    url: jdbc:mysql://localhost:3306/user_center
+    url: jdbc:mysql://localhost:3306/like_minded
 
   # session 失效时间
   session:
@@ -27,3 +33,21 @@ mybatis-plus:
 
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# springdoc-openapi项目配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: camellia.controller
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
