@@ -10,10 +10,12 @@ import camellia.model.request.UserLoginRequest;
 import camellia.model.request.UserRegisterRequest;
 import camellia.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +30,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/user")
 @Slf4j
-//@CrossOrigin(value = "https://flower.camelliaxiaohua.online", allowCredentials = "true")
+//@CrossOrigin(origins = {"http://localhost:3000"})
+@Tag(name = "hello")
 public class UserController {
 
     @Autowired
@@ -86,6 +89,7 @@ public class UserController {
      * @param request
      * @return
      */
+
     @PostMapping("/logout")
     public BaseResponse<Integer> userLogOut(HttpServletRequest request) {
         if(request == null) {
@@ -154,4 +158,22 @@ public class UserController {
         return user ==null || user.getUserRole() == UserConstant.DEFAULT_ROLE;
     }
 
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList
+     * @return 查询的结果集
+     */
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) List<String> tagNameList) {
+        if(CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"传入标签为空");
+        }
+        List<User> users = userService.searchUserByTagsByRAM(tagNameList);
+        return ResultUtils.success(users);
+    }
+
+
 }
+
+
+//http://localhost:8080/api/swagger-ui/index.html
