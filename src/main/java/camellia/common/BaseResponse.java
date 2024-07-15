@@ -31,7 +31,8 @@ public class BaseResponse<T> implements Serializable {
     private String message;
 
     /**
-     * 描述信息，用于提供更详细的响应说明。
+     * 描述信息，用于提供更详细的响应说明。<br>
+     * 根据需求，可删。
      */
     private String description;
 
