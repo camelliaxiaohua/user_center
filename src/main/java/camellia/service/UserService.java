@@ -58,4 +58,13 @@ public interface UserService extends IService<User> {
      * @return
      */
     Integer userLogOut(HttpServletRequest request);
+
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList 用户要拥有的标签
+     * @return 返回安全对象
+     */
+    List<User> searchUserByTagsBySQL(List<String> tagNameList);
+
+    List<User> searchUserByTagsByRAM(List<String> tagNameList);
 }

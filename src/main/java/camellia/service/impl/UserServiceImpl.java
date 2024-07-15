@@ -9,16 +9,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import camellia.model.User;
 import camellia.service.UserService;
 import camellia.mapper.UserMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
-import java.util.List;
+import java.lang.reflect.Type;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -205,6 +210,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setCreateTime(user.getCreateTime());
         safetyUser.setUserRole(user.getUserRole());
         safetyUser.setPlanetCode(user.getPlanetCode());
+        safetyUser.setTags(user.getTags());
+        safetyUser.setProfile(user.getProfile());
         return safetyUser;
     }
 
@@ -219,6 +226,73 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return 1;
     }
+
+
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList 用户要拥有的标签
+     * @return 返回安全对象
+     */
+
+    @Deprecated
+    @Override
+    public List<User> searchUserByTagsBySQL(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "传入的标签为空。");
+        }
+        log.info("使用数据库查询：==============================");
+        //记录开始时间
+        long start = System.currentTimeMillis();
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "传入的标签为空。");
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        for (String tagName : tagNameList) {
+            queryWrapper = queryWrapper.like("tags", tagName);
+        }
+        List<User> users = userMapper.selectList(queryWrapper);
+        List<User> safetyUsers = users.stream().map(this::getSafetyUser).collect(Collectors.toList());
+        //记录结束时间
+        long end = System.currentTimeMillis();
+        log.info("查询消耗时间为：  数据大小为："+(end-start)+"ms", tagNameList.size());
+        return safetyUsers;
+    }
+
+
+    /**
+     * 通过内存查询
+     * @param tagNameList
+     * @return
+     */
+
+    @Override
+    public List<User> searchUserByTagsByRAM(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"传入的标签为空。");
+        }
+        //1.先查询所有的用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        List<User> users = userMapper.selectList(queryWrapper);
+        Gson gson = new Gson();
+        //2. 在内存中判断是否包含要求的标签
+        return users.stream().filter(user->{
+            if (StringUtils.isBlank(user.getTags())) return false;
+            String tagsStr = user.getTags();
+            // 使用 TypeToken<List<String>> 来反序列化 JSON 字符串为 List<String>
+            //List<String> tempTagNameList = gson.fromJson(tagsStr, new TypeToken<List<String>>() {}.getType());
+            //在新的gson中集合的类型传递进行了优化，不用再getType()拿类型了。
+            List<String> tempTagNameList = gson.fromJson(tagsStr, new TypeToken<List<String>>(){});
+            // 将 List 转换为 Set
+            Set<String> tagNameSet = new HashSet<>(tempTagNameList);
+            for (String tagName : tagNameList) {
+                if (!tagNameSet.contains(tagName)) return false;
+            }
+            return true;
+        }).map(this::getSafetyUser).collect(Collectors.toList());
+    }
+
+
+
 }
 
 
