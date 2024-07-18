@@ -1,53 +1,64 @@
 spring:
   profiles:
-    active: dev
+    active: dev # 指定当前激活的 Spring 配置文件为 dev
   application:
-    name: user_center
+    name: user_center # 设置应用程序的名称为 user_center
 
   mvc:
     pathmatch:
-      matching-strategy: ANT_PATH_MATCHER
+      matching-strategy: ANT_PATH_MATCHER # 使用 ANT_PATH_MATCHER 进行路径匹配
 
-
-  # DataSource Config
+  # 数据源配置
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 24211
-    url: jdbc:mysql://localhost:3306/like_minded
+    driver-class-name: com.mysql.cj.jdbc.Driver # 数据库驱动类
+    username: root # 数据库用户名
+    password: 24211 # 数据库密码
+    url: jdbc:mysql://localhost:3306/like_minded # 数据库连接 URL
 
-  # session 失效时间
+  # session 失效时间（秒）
   session:
-    timeout: 86400
+    timeout: 86400 # 设置 session 的超时时间为 86400 秒（24 小时）
+    store-type: redis
+  # Redis 配置
+  data:
+    redis:
+      port: 6379 # Redis 服务端口
+      host: localhost # Redis 主机地址
+      database: 0 # Redis 数据库索引
+
 server:
-  port: 8080
+  port: 8080 # 设置应用程序运行的端口为 8080
   servlet:
-    context-path: /api
+    context-path: /api # 设置应用程序的上下文路径为 /api
+    session:
+      cookie:
+        domain: localhost # 可以设置 cookie 的域名
 
 mybatis-plus:
   global-config:
     db-config:
       logic-delete-field: isDelete # 全局逻辑删除字段名
-      logic-delete-value: 1 # 逻辑已删除值
-      logic-not-delete-value: 0 # 逻辑未删除值
+      logic-delete-value: 1 # 逻辑删除时的值
+      logic-not-delete-value: 0 # 逻辑未删除时的值
 
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 配置 MyBatis Plus 的日志实现类为 StdOutImpl
 
-# springdoc-openapi项目配置
+# springdoc-openapi 项目配置
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
+    path: /swagger-ui.html # 设置 Swagger UI 的访问路径
+    tags-sorter: alpha # Swagger UI 标签排序方式为字母顺序
+    operations-sorter: alpha # Swagger UI 操作排序方式为字母顺序
   api-docs:
-    path: /v3/api-docs
+    path: /v3/api-docs # 设置 API 文档的访问路径
   group-configs:
-    - group: 'default'
-      paths-to-match: '/**'
-      packages-to-scan: camellia.controller
-# knife4j的增强配置，不需要增强可以不配
+    - group: 'default' # 配置 API 文档的默认分组
+      paths-to-match: '/**' # 配置该分组匹配的路径
+      packages-to-scan: camellia.controller # 配置该分组扫描的包路径
+
+# knife4j 的增强配置
 knife4j:
-  enable: true
+  enable: true # 启用 knife4j 增强功能
   setting:
-    language: zh_cn
+    language: zh_cn # 设置 knife4j 的语言为中文
