@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String validPattern = "^[a-zA-Z0-9_]*$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR); // 如果找到特殊字符，返回 -1L
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户名只能是大小写字母和下划线。"); // 如果找到特殊字符，返回 -1L
         }
         //密码和确认密码不同
         if (!checkPassword.equals(userPassword)) {
@@ -292,7 +291,75 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
 
+    /**
+     * <h6>用户更新操作</h6>
+     * <p>1. 传来用户和session存储的用户信息相同，则是用户本人，可以进行修改信息，但仅限本人。</p>
+     * <p>2. 传来的用户信息和session存储的用户信息不同，则需要判断是否为管理员，如果是可以修改其他用户。</p>
+     * @param user 要修改的用户及信息。
+     * @param userInfo session中存储的用户信息（当前登入用户信息）
+     * @return 修改影响的数据
+     */
+    @Deprecated
+    @Override
+    public Integer updateUser(User user, User userInfo) {
+        // 获取用户ID
+        long userId = user.getId();
+        long userInfoId = userInfo.getId();
+        // 参数校验
+        if (userId <= 0 || userInfoId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
+        }
+        //todo  补充校验，前端传空处理。
 
+        // 用户权限判定
+        if (isAdmin(userInfo) || userId == userInfoId) {
+            User oldUser = userMapper.selectById(userId);
+            if (oldUser == null) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+            }
+            // 执行更新
+            int updateCount = userMapper.updateById(user);
+            return updateCount;
+        } else {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "对不起，你没有权限");
+        }
+    }
+
+
+    /**
+     * <h6>获取session中用户信息</h6>
+     * @param request
+     * @return 当前登入用户的信息。
+     */
+    @Override
+    public User getUserLoginInfo(HttpServletRequest request) {
+        if (request == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户未登入");
+        }
+        return (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+    }
+
+
+    /**
+     * <h6>是否为管理员</h6>
+     * @param request
+     * @return true/false
+     */
+    public boolean isAdmin(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return user ==null || user.getUserRole() == UserConstant.DEFAULT_ROLE;
+    }
+
+
+    /**
+     * <h6>(重载方法)是否为管理员</h6>
+     * @param userLoginInfo
+     * @return true/false
+     */
+    public boolean isAdmin(User userLoginInfo) {
+        return userLoginInfo !=null && userLoginInfo.getUserRole() == UserConstant.ADMIN_ROLE;
+    }
 }
 
 
