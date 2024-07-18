@@ -24,7 +24,7 @@ spring:
     redis:
       port: 6379 # Redis 服务端口
       host: localhost # Redis 主机地址
-      database: 0 # Redis 数据库索引
+      database: 1 # Redis 数据库索引  0-存储sessionID   1-存储数据缓存
 
 server:
   port: 8080 # 设置应用程序运行的端口为 8080
