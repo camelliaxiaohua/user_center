@@ -10,15 +10,20 @@ import camellia.model.request.UserLoginRequest;
 import camellia.model.request.UserRegisterRequest;
 import camellia.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -36,12 +41,15 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Qualifier("redisTemplate")
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
-     * 用户注册
+     * <h6>用户注册</h6>
      *
-     * @param userRegisterRequest
-     * @return
+     * @param userRegisterRequest 封装的用户请求体
+     * @return 注册id
      */
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
@@ -118,11 +126,16 @@ public class UserController {
         return ResultUtils.success(user);
     }
 
-
+    /**
+     * 根据用户名字搜索用户。
+     * @param username
+     * @param request
+     * @return 用户信息
+     */
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String username,HttpServletRequest request) {
         //仅管理员可查询
-        if (isAdmin(request)){
+        if (userService.isAdmin(request)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -134,10 +147,16 @@ public class UserController {
         return ResultUtils.success(list);
     }
 
+    /**
+     * 根据用户id搜索用户。
+     * @param id
+     * @param request
+     * @return
+     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id , HttpServletRequest request) {
         //仅管理员可删除。
-        if(isAdmin(request)){
+        if(userService.isAdmin(request)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         //可以直接userService.removeById(id);
@@ -145,18 +164,6 @@ public class UserController {
         return ResultUtils.success(flag);
     }
 
-
-
-    /**
-     * 是否为管理员
-     * @param request
-     * @return true/false
-     */
-    private boolean isAdmin(HttpServletRequest request) {
-        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user ==null || user.getUserRole() == UserConstant.DEFAULT_ROLE;
-    }
 
     /**
      * 根据标签搜索用户
@@ -172,8 +179,43 @@ public class UserController {
         return ResultUtils.success(users);
     }
 
+    @GetMapping("/recommend")
+    public BaseResponse<Page<User>> recommendUsers(long pageSize,long pageNum,HttpServletRequest request) {
+        User loginUser = userService.getUserLoginInfo(request);
+        String redisKey = String.format("camellia:user:recommend:%s", loginUser.getId());
+        ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
+        //如果有缓存就加载缓存
+        Page<User> userPage = (Page<User>) redisTemplate.opsForValue().get(redisKey);
+        if(userPage != null){
+            return ResultUtils.success(userPage);
+        }
+        //无缓存，直接接查数据库。
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+       //写缓存
+        try{
+            valueOperations.set(redisKey,userPage,10000, TimeUnit.MICROSECONDS);
+        }catch (Exception e){
+            log.error("redis set key error",e);
+        }
+        return ResultUtils.success(userPage);
+    }
+
+    /**
+     *
+     */
+    @PostMapping("/update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
+        //1. 校验参数是否为空
+        if (user == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户为空，请输入要修改的用户。");
+        }
+        //2. 校验用户信息
+        User userInfo = userService.getUserLoginInfo(request);
+        Integer result = userService.updateUser(user,userInfo);
+        return ResultUtils.success(result);
+    }
 
 }
 
 
-//http://localhost:8080/api/swagger-ui/index.html
