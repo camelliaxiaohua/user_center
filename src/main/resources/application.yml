@@ -4,7 +4,7 @@ spring:
   application:
     name: user_center # 设置应用程序的名称为 user_center
 
-# application.yml
+  # application.yml
   task:
     scheduling:
       pool:

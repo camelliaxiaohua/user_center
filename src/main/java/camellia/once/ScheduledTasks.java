@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 public class ScheduledTasks{
 
     @Scheduled(fixedRate = 5000)
-    public void perFormTask() throws InterruptedException {
-
+    public void perFormTask() {
+        //用于在测试类调用，测试环境。
         System.out.println("testPerFormTask is execute："+System.currentTimeMillis());
     }
 

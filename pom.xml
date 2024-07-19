@@ -7,7 +7,7 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.1</version>
         <relativePath/> <!-- lookup parent from repository -->
-    </parent>  
+    </parent>
     <groupId>camellia</groupId>
     <artifactId>user_center</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -71,11 +71,11 @@
             <version>2.0.31</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-security</artifactId>-->
-<!--            <version>3.3.1</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-security</artifactId>-->
+        <!--            <version>3.3.1</version>-->
+        <!--        </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/de.mkammerer/argon2-jvm -->
         <dependency>
@@ -97,11 +97,11 @@
         </dependency>
 
 
-<!--        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>2.2.2</version>
-        </dependency>-->
+        <!--        <dependency>
+                    <groupId>org.mybatis.spring.boot</groupId>
+                    <artifactId>mybatis-spring-boot-starter</artifactId>
+                    <version>2.2.2</version>
+                </dependency>-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
@@ -161,6 +161,13 @@
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-data-redis</artifactId>
             <version>3.3.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.redisson/redisson -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.33.0</version>
         </dependency>
 
     </dependencies>

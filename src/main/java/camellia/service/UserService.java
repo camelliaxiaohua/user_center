@@ -1,6 +1,7 @@
 package camellia.service;
 
 import camellia.model.User;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -86,4 +87,6 @@ public interface UserService extends IService<User> {
     boolean isAdmin(HttpServletRequest request);
 
     boolean isAdmin(User userLoginInfo);
+
+    Page<User> recommendUsers(long pageSize, long pageNum, HttpServletRequest request);
 }

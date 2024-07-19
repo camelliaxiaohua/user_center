@@ -5,6 +5,7 @@ import camellia.constant.UserConstant;
 import camellia.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import camellia.model.User;
 import camellia.service.UserService;
@@ -15,11 +16,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,12 +38,23 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    //密码加密——加盐
+    /**
+     * 密码加密——加盐
+     */
     private static final String SALT = "camellia";
 
-
+    /**
+     *
+     */
     @Autowired
     private UserMapper userMapper;
+
+    /**
+     *
+     */
+    @Autowired
+    private RedisTemplate redisTemplate;
+
 
     /**
      * 用户注册校验
@@ -83,7 +98,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户名已被使用");
         }
 
-        //用户编号账户不能重复(放在校验最后，减少性能浪费。)
+        //用户编号账户不能重复
+        // todo 设置用户注册自动生成随机的5为编号码
         queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("planet_code", planetCode);
         count = userMapper.selectCount(queryWrapper);
@@ -360,6 +376,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public boolean isAdmin(User userLoginInfo) {
         return userLoginInfo !=null && userLoginInfo.getUserRole() == UserConstant.ADMIN_ROLE;
     }
+
+    /**
+     *
+     * @param pageSize
+     * @param pageNum
+     * @param request
+     * @return
+     */
+    @Override
+    public Page<User> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
+        // todo 用户不用登入也可以查看？
+        // 获取当前登录用户的信息
+        User loginUser = getUserLoginInfo(request);
+        String redisKey = String.format("camellia:user:recommend:%s", loginUser.getId());
+        ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
+        //如果有缓存就加载缓存
+        Page<User> userPage = (Page<User>) redisTemplate.opsForValue().get(redisKey);
+        if(userPage != null){
+            return userPage;
+        }
+        //无缓存，直接接查数据库。
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        userPage = page(new Page<>(pageNum, pageSize), queryWrapper);
+        //写缓存
+        try{
+            valueOperations.set(redisKey,userPage,10000, TimeUnit.MICROSECONDS);
+        }catch (Exception e){
+            log.error("redis set key error",e);
+        }
+        return userPage;
+    }
+
 }
 
 

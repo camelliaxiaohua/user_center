@@ -1,7 +1,8 @@
 package camellia.common;
 
 /**
- *定义一个工具类 ResultUtils，用于生成 BaseResponse 对象，从而简化成功和失败响应的创建。
+ *<h6>定义一个工具类 ResultUtils</h6>
+ * 用于生成 BaseResponse 对象，从而简化成功和失败响应的创建。
  * @Datetime: 2024/7/12下午12:38
  * @author: Camellia.xioahua
  */
