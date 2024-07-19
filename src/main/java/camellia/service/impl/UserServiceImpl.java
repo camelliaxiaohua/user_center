@@ -9,16 +9,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import camellia.model.User;
 import camellia.service.UserService;
 import camellia.mapper.UserMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -65,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String validPattern = "^[a-zA-Z0-9_]*$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR); // 如果找到特殊字符，返回 -1L
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户名只能是大小写字母和下划线。"); // 如果找到特殊字符，返回 -1L
         }
         //密码和确认密码不同
         if (!checkPassword.equals(userPassword)) {
@@ -205,6 +209,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setCreateTime(user.getCreateTime());
         safetyUser.setUserRole(user.getUserRole());
         safetyUser.setPlanetCode(user.getPlanetCode());
+        safetyUser.setTags(user.getTags());
+        safetyUser.setProfile(user.getProfile());
         return safetyUser;
     }
 
@@ -218,6 +224,141 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //移除用户登入态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return 1;
+    }
+
+
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList 用户要拥有的标签
+     * @return 返回安全对象
+     */
+
+    @Deprecated
+    @Override
+    public List<User> searchUserByTagsBySQL(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "传入的标签为空。");
+        }
+        log.info("使用数据库查询：==============================");
+        //记录开始时间
+        long start = System.currentTimeMillis();
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "传入的标签为空。");
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        for (String tagName : tagNameList) {
+            queryWrapper = queryWrapper.like("tags", tagName);
+        }
+        List<User> users = userMapper.selectList(queryWrapper);
+        List<User> safetyUsers = users.stream().map(this::getSafetyUser).collect(Collectors.toList());
+        //记录结束时间
+        long end = System.currentTimeMillis();
+        log.info("查询消耗时间为：  数据大小为："+(end-start)+"ms", tagNameList.size());
+        return safetyUsers;
+    }
+
+
+    /**
+     * 通过内存查询
+     * @param tagNameList
+     * @return
+     */
+
+    @Override
+    public List<User> searchUserByTagsByRAM(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"传入的标签为空。");
+        }
+        //1.先查询所有的用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        List<User> users = userMapper.selectList(queryWrapper);
+        Gson gson = new Gson();
+        //2. 在内存中判断是否包含要求的标签
+        return users.stream().filter(user->{
+            if (StringUtils.isBlank(user.getTags())) return false;
+            String tagsStr = user.getTags();
+            // 使用 TypeToken<List<String>> 来反序列化 JSON 字符串为 List<String>
+            //List<String> tempTagNameList = gson.fromJson(tagsStr, new TypeToken<List<String>>() {}.getType());
+            //在新的gson中集合的类型传递进行了优化，不用再getType()拿类型了。
+            List<String> tempTagNameList = gson.fromJson(tagsStr, new TypeToken<List<String>>(){});
+            // 将 List 转换为 Set
+            Set<String> tagNameSet = new HashSet<>(tempTagNameList);
+            for (String tagName : tagNameList) {
+                if (!tagNameSet.contains(tagName)) return false;
+            }
+            return true;
+        }).map(this::getSafetyUser).collect(Collectors.toList());
+    }
+
+
+    /**
+     * <h6>用户更新操作</h6>
+     * <p>1. 传来用户和session存储的用户信息相同，则是用户本人，可以进行修改信息，但仅限本人。</p>
+     * <p>2. 传来的用户信息和session存储的用户信息不同，则需要判断是否为管理员，如果是可以修改其他用户。</p>
+     * @param user 要修改的用户及信息。
+     * @param userInfo session中存储的用户信息（当前登入用户信息）
+     * @return 修改影响的数据
+     */
+    @Deprecated
+    @Override
+    public Integer updateUser(User user, User userInfo) {
+        // 获取用户ID
+        long userId = user.getId();
+        long userInfoId = userInfo.getId();
+        // 参数校验
+        if (userId <= 0 || userInfoId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
+        }
+        //todo  补充校验，前端传空处理。
+
+        // 用户权限判定
+        if (isAdmin(userInfo) || userId == userInfoId) {
+            User oldUser = userMapper.selectById(userId);
+            if (oldUser == null) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+            }
+            // 执行更新
+            int updateCount = userMapper.updateById(user);
+            return updateCount;
+        } else {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "对不起，你没有权限");
+        }
+    }
+
+
+    /**
+     * <h6>获取session中用户信息</h6>
+     * @param request
+     * @return 当前登入用户的信息。
+     */
+    @Override
+    public User getUserLoginInfo(HttpServletRequest request) {
+        if (request == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户未登入");
+        }
+        return (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+    }
+
+
+    /**
+     * <h6>是否为管理员</h6>
+     * @param request
+     * @return true/false
+     */
+    public boolean isAdmin(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return user ==null || user.getUserRole() == UserConstant.DEFAULT_ROLE;
+    }
+
+
+    /**
+     * <h6>(重载方法)是否为管理员</h6>
+     * @param userLoginInfo
+     * @return true/false
+     */
+    public boolean isAdmin(User userLoginInfo) {
+        return userLoginInfo !=null && userLoginInfo.getUserRole() == UserConstant.ADMIN_ROLE;
     }
 }
 

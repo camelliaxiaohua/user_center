@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * 用户服务测试
@@ -35,7 +38,6 @@ class UserServiceTest {
         System.out.println(user.getId());
         Assertions.assertTrue(result);
     }
-
 
     /**
      * 用户校验测试
@@ -83,6 +85,14 @@ class UserServiceTest {
         checkPassword = "242118888";
         result = userService.userRegister(username, password, checkPassword, planetCode);
         Assertions.assertTrue(result>0);
+    }
+
+    @Test
+    void searchUserByTags() {
+
+        List<String> tagNameList = Arrays.asList("java","pathon","c++");
+        List<User> users = userService.searchUserByTagsByRAM(tagNameList);
+        Assertions.assertNotNull(users);
     }
 
 }
