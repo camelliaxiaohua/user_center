@@ -61,8 +61,8 @@ public class TeamController {
         BeanUtils.copyProperties(teamAddRequest, team);
 
         // 调用teamService的addTeam方法，将新团队和用户信息传递进去，返回新团队的ID
-        long teamId = teamService.addTeam(team, userLoginInfo);
-
+        long teamId = 0;
+        teamId = teamService.addTeam(team, userLoginInfo);
         // 返回包含新团队ID的成功响应
         return ResultUtils.success(teamId);
     }

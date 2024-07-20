@@ -17,6 +17,6 @@ public interface TeamService extends IService<Team> {
      * @param loginUser
      * @return
      */
-    long addTeam(Team team, User loginUser);
+    long addTeam(Team team, User loginUser) ;
 
 }
