@@ -1,6 +1,6 @@
 package camellia.service;
 
-import camellia.model.User;
+import camellia.model.domain.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
