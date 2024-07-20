@@ -1,6 +1,7 @@
 package camellia.service;
 
 import camellia.model.domain.Team;
+import camellia.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +10,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-07-20 09:02:12
 */
 public interface TeamService extends IService<Team> {
+
+    /**
+     *
+     * @param team
+     * @param loginUser
+     * @return
+     */
+    long addTeam(Team team, User loginUser);
 
 }

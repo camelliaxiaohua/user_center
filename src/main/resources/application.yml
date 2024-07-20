@@ -20,7 +20,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver # 数据库驱动类
     username: root # 数据库用户名
     password: 24211 # 数据库密码
-    url: jdbc:mysql://localhost:3306/like_minded # 数据库连接 URL
+    url: jdbc:mysql://localhost:3306/like_minded?serverTimezone=Asia/Shanghai # 数据库连接 URL
 
   # session 失效时间（秒）
   session:
