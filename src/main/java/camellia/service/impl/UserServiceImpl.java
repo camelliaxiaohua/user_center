@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import camellia.model.User;
+import camellia.model.domain.User;
 import camellia.service.UserService;
 import camellia.mapper.UserMapper;
 import com.google.gson.Gson;

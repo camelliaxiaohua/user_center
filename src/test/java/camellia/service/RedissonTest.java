@@ -38,7 +38,7 @@ public class RedissonTest {
         try {
             // 只有一个线程能获取到锁
             if (lock.tryLock(0, -1, TimeUnit.MILLISECONDS)) {
-                Thread.sleep(300000);
+               // Thread.sleep(300000);
                 System.out.println("getLock: " + Thread.currentThread().getId());
             }
         } catch (InterruptedException e) {
@@ -47,7 +47,7 @@ public class RedissonTest {
             // 只能释放自己的锁
             if (lock.isHeldByCurrentThread()) {
                 System.out.println("unLock: " + Thread.currentThread().getId());
-                lock.unlock();
+               // lock.unlock();
             }
         }
     }

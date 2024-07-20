@@ -1,6 +1,6 @@
 package camellia.service;
 
-import camellia.model.User;
+import camellia.model.domain.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

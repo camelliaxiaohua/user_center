@@ -5,7 +5,7 @@ import camellia.common.ErrorCode;
 import camellia.common.ResultUtils;
 import camellia.constant.UserConstant;
 import camellia.exception.BusinessException;
-import camellia.model.User;
+import camellia.model.domain.User;
 import camellia.model.request.UserLoginRequest;
 import camellia.model.request.UserRegisterRequest;
 import camellia.service.UserService;

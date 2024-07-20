@@ -1,4 +1,4 @@
-package camellia.model;
+package camellia.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

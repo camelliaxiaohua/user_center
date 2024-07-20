@@ -1,7 +1,6 @@
 package camellia.job;
 
-import camellia.mapper.UserMapper;
-import camellia.model.User;
+import camellia.model.domain.User;
 import camellia.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -47,7 +46,7 @@ public class PreCacheJob {
      * 定时任务方法，每天15:45执行一次。
      * 方法内实现了对重点用户推荐数据的预缓存逻辑。
      */
-    @Scheduled(cron = "00 55 14 * * *")
+    @Scheduled(cron = "00 00 03 * * *")
     public void doCacheRecommendUser() {
         // 获取分布式锁
         RLock lock = redissonClient.getLock("camellia:precachejob:docache:lock");

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  * @author: Camellia.xioahua
  */
 
-@Component
+//@Component
 public class ScheduledTasks{
 
     @Scheduled(fixedRate = 5000)
@@ -16,5 +16,4 @@ public class ScheduledTasks{
         //用于在测试类调用，测试环境。
         System.out.println("testPerFormTask is execute："+System.currentTimeMillis());
     }
-
 }
